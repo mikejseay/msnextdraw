@@ -6,7 +6,7 @@ a Christmas tree. Output the result as an SVG file.
 import math
 
 
-def generate_christmas_tree_svg(filename="christmas_tree.svg"):
+def generate_christmas_tree_svg(filename="./output/christmas_tree.svg"):
     # SVG dimensions
     width = 400
     height = 500
@@ -17,7 +17,7 @@ def generate_christmas_tree_svg(filename="christmas_tree.svg"):
     end_y = 420  # Bottom of tree
 
     # Sine wave parameters
-    num_waves = 18  # Number of complete sine cycles
+    num_waves = 12  # Number of complete sine cycles
     points_per_wave = 50  # Resolution of the sine wave
     total_points = num_waves * points_per_wave
 
