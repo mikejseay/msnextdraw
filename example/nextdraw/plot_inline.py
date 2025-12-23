@@ -1,4 +1,4 @@
-'''
+"""
 plot_inline.py
 
 Demonstrate use of nextdraw module in "plot" mode, to plot SVG without
@@ -62,12 +62,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-'''
+"""
 
 import random
 from nextdraw import NextDraw
 
-nd1 = NextDraw()             # Create class instance
+nd1 = NextDraw()  # Create class instance
 
 """
 Compose an SVG document as a string.
@@ -143,10 +143,10 @@ SVG_BODY += random_ellipse
 
 SVG = SVG_HEAD + SVG_BODY + SVG_TAIL
 
-nd1.plot_setup(SVG)    # Parse the SVG
+nd1.plot_setup(SVG)  # Parse the SVG
 
-nd1.options.speed_pendown = 50 # Set maximum pen-down speed to 50%
+nd1.options.speed_pendown = 50  # Set maximum pen-down speed to 50%
 
 # See documentation for a description of additional options and their allowed values
 
-nd1.plot_run()   # plot the document
+nd1.plot_run()  # plot the document

@@ -71,7 +71,7 @@ def generate_christmas_tree_svg(filename="christmas_tree.svg"):
     star_path += " Z"
 
     # Create SVG content
-    svg_content = f'''<?xml version="1.0" encoding="UTF-8"?>
+    svg_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
   <rect width="100%" height="100%" fill="white"/>
 
@@ -83,7 +83,7 @@ def generate_christmas_tree_svg(filename="christmas_tree.svg"):
 
   <!-- Trunk -->
   <path d="{trunk_path}" fill="none" stroke="#8B4513" stroke-width="2"/>
-</svg>'''
+</svg>"""
 
     # Write to file
     with open(filename, "w") as f:

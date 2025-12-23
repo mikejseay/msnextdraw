@@ -1,4 +1,4 @@
-'''
+"""
 report_pos_mm.py
 
 Run this demo by calling: python report_pos_mm.py
@@ -67,7 +67,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-'''
+"""
 
 import sys
 from nextdraw import NextDraw
@@ -89,4 +89,4 @@ y_pos_mm = current_position[1]
 
 print(f"{x_pos_mm:0.3f}, {y_pos_mm:0.3f}")
 
-nd1.disconnect()             # Close serial port to NextDraw
+nd1.disconnect()  # Close serial port to NextDraw

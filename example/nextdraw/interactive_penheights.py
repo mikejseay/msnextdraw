@@ -1,4 +1,4 @@
-'''
+"""
 interactive_penheights.py
 
 Demonstrate use of nextdraw module in "interactive" mode.
@@ -68,22 +68,21 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-'''
-
+"""
 
 import sys
 import time
 
 from nextdraw import NextDraw
 
-nd1 = NextDraw() # Initialize class
+nd1 = NextDraw()  # Initialize class
 
-nd1.interactive()            # Enter interactive mode
-connected = nd1.connect()    # Open serial port to NextDraw
+nd1.interactive()  # Enter interactive mode
+connected = nd1.connect()  # Open serial port to NextDraw
 
 if not connected:
     print("Not connected to machine; exiting.")
-    sys.exit() # end script
+    sys.exit()  # end script
 
 nd1.penup()
 
@@ -91,7 +90,7 @@ nd1.penup()
 
 nd1.options.pen_pos_down = 20
 nd1.options.pen_pos_up = 30
-nd1.update()                 # Process changes to options
+nd1.update()  # Process changes to options
 
 nd1.pendown()
 time.sleep(1.0)
@@ -101,10 +100,10 @@ time.sleep(1.0)
 nd1.options.pen_pos_down = 0
 nd1.options.pen_pos_up = 50
 
-nd1.update()                 # Process changes to options
+nd1.update()  # Process changes to options
 
 nd1.pendown()
 time.sleep(1.0)
 nd1.penup()
 
-nd1.disconnect()             # Close serial port to NextDraw
+nd1.disconnect()  # Close serial port to NextDraw

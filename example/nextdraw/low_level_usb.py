@@ -1,4 +1,4 @@
-'''
+"""
 low_level_usb.py
 
 Demonstrate advanced features of nextdraw python module in "interactive" mode.
@@ -87,30 +87,29 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-'''
-
+"""
 
 import sys
 
 from nextdraw import NextDraw
 
-nd1 = NextDraw() # Initialize class
+nd1 = NextDraw()  # Initialize class
 
-nd1.interactive()            # Enter interactive mode
-connected = nd1.connect()    # Open serial port to NextDraw
+nd1.interactive()  # Enter interactive mode
+connected = nd1.connect()  # Open serial port to NextDraw
 
 if not connected:
     print("Not connected to machine; exiting.")
-    sys.exit() # end script
+    sys.exit()  # end script
 
-nd1.moveto(2,1)                  # Absolute pen-up move, to (2 inch, 1 inch)
+nd1.moveto(2, 1)  # Absolute pen-up move, to (2 inch, 1 inch)
 
-version = nd1.usb_query("V") # Query firmware version
+version = nd1.usb_query("V")  # Query firmware version
 print("Firmware version data: " + version)
 
-step_pos = nd1.usb_query("QS") # Query step position
+step_pos = nd1.usb_query("QS")  # Query step position
 print("Step pos: " + step_pos)
 
-nd1.usb_command("HM,3200")    # Return home at a rate of 3200 steps per second
+nd1.usb_command("HM,3200")  # Return home at a rate of 3200 steps per second
 
-nd1.disconnect()             # Close serial port to NextDraw
+nd1.disconnect()  # Close serial port to NextDraw

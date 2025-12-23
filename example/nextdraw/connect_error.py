@@ -1,4 +1,4 @@
-'''
+"""
 connect_error.py
 
 Demonstrate error handling of nextdraw python module in "interactive" mode.
@@ -67,9 +67,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-'''
+"""
 
 from nextdraw import NextDraw
+
 nd1 = NextDraw()
 
 nd1.interactive()
@@ -81,7 +82,7 @@ nd1.options.port = "East12345"
 connected = nd1.connect()
 
 if connected:
-    print('Connected!')
+    print("Connected!")
     print('This won\'t print unless you named the machine "East12345".')
     print("(And if so, that's not very useful for this example.)")
     nd1.disconnect()
@@ -90,12 +91,12 @@ else:
 
 print("\nNow, turn on feature to raise error on failure to connect.")
 
-nd1.errors.connect = True # Enable raising error on failure to connect.
+nd1.errors.connect = True  # Enable raising error on failure to connect.
 
 
 try:
     nd1.connect()
-    print('Connected!')
+    print("Connected!")
     nd1.disconnect()
 except RuntimeError:
     print(f"A RuntimeError was raised with error code: {nd1.errors.code}")

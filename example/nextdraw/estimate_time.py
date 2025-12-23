@@ -1,4 +1,4 @@
-'''
+"""
 estimate_time.py
 
 Demonstrate use of nextdraw module in "plot" mode, to estimate the time
@@ -67,19 +67,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-'''
+"""
 
 import sys
 import os.path
 from nextdraw import NextDraw
 
-nd1 = NextDraw()             # Create class instance
+nd1 = NextDraw()  # Create class instance
 
-'''
+"""
 Try a few different possible locations for our file, so that this can be
 called from either the root or examples_python directory, or if you're
 in the same directory with the test file.
-'''
+"""
 
 LOCATION1 = "test/assets/NextDraw_trivial.svg"
 LOCATION2 = "../test/assets/NextDraw_trivial.svg"
@@ -96,19 +96,19 @@ if os.path.exists(LOCATION3):
 
 if FILE:
     print("Example file located at: " + FILE)
-    nd1.plot_setup(FILE)    # Parse the input file
+    nd1.plot_setup(FILE)  # Parse the input file
 else:
     print("Unable to locate example file; exiting.")
-    sys.exit() # end script
+    sys.exit()  # end script
 
 # The above code, starting with "LOCATION1" can all be replaced by a single line
 # if you already know where the file is. This can be as simple as:
 # nd1.plot_setup("NextDraw_trivial.svg")
 
-nd1.options.preview  = True
-nd1.options.report_time = True # Enable time and distance estimates
+nd1.options.preview = True
+nd1.options.report_time = True  # Enable time and distance estimates
 
-nd1.plot_run()   # plot the document
+nd1.plot_run()  # plot the document
 
 print_time_seconds = nd1.time_estimate
 dist_pen_down = nd1.distance_pendown

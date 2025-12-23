@@ -19,7 +19,7 @@ nextdraw-api = { url = "https://software-download.bantamtools.com/nd/api/nextdra
 # Set the maximum line length to 100.
 line-length = 100
 # Match your runtime so Ruff/pyupgrade can suggest modern syntax.
-target-version = "py39"
+target-version = "py311"
 
 [tool.ruff.lint]
 # A solid "feel like PyCharm" ruleset.
@@ -44,3 +44,13 @@ force-sort-within-sections = true
 combine-as-imports = true
 # Optionally tell Ruff what’s "first-party" so it groups imports nicely:
 # known-first-party = ["your_package_name"]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings (the default).
+quote-style = "double"
+# Like Black, indent with spaces, rather than tabs (the default).
+indent-style = "space"
+# Like Black, respect magic trailing commas (the default).
+skip-magic-trailing-comma = false
+# Like Black, automatically detect the appropriate line ending (the default).
+line-ending = "auto"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-'''
+"""
 interactive_xy.py
 
 Demonstrate use of nextdraw module in "interactive" mode.
@@ -68,56 +68,56 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-'''
+"""
 
 import sys
 
 from nextdraw import NextDraw
 
-nd1 = NextDraw() # Initialize class
+nd1 = NextDraw()  # Initialize class
 
-nd1.interactive()            # Enter interactive mode
-connected = nd1.connect()    # Open serial port to NextDraw
+nd1.interactive()  # Enter interactive mode
+connected = nd1.connect()  # Open serial port to NextDraw
 
 if not connected:
     print("Not connected to machine; exiting.")
-    sys.exit() # end script
+    sys.exit()  # end script
 
 # Draw square, using "moveto/lineto" (absolute move) syntax:
 
-nd1.moveto(1, 1)              # Absolute pen-up move, to (1 inch, 1 inch)
-nd1.lineto(2, 1)              # Absolute pen-down move, to (2 inches, 1 inch)
+nd1.moveto(1, 1)  # Absolute pen-up move, to (1 inch, 1 inch)
+nd1.lineto(2, 1)  # Absolute pen-down move, to (2 inches, 1 inch)
 nd1.lineto(2, 2)
 nd1.lineto(1, 2)
-nd1.lineto(1, 1)              # Finish drawing square
-nd1.moveto(0, 0)              # Absolute pen-up move, back to origin.
+nd1.lineto(1, 1)  # Finish drawing square
+nd1.moveto(0, 0)  # Absolute pen-up move, back to origin.
 
-nd1.delay(2000)              # Delay 2 seconds
+nd1.delay(2000)  # Delay 2 seconds
 
 # Change some options:
-nd1.options.units = 1              # set working units to cm.
-nd1.options.speed_pendown = 10     # set pen-down speed to slow
-nd1.options.pen_pos_up = 50        # select a large range for the pen up/down swing
+nd1.options.units = 1  # set working units to cm.
+nd1.options.speed_pendown = 10  # set pen-down speed to slow
+nd1.options.pen_pos_up = 50  # select a large range for the pen up/down swing
 nd1.options.pen_pos_down = 10
 
-nd1.update()                 # Process changes to options
+nd1.update()  # Process changes to options
 
 # Draw an "X" through the square, using "move/line" (relative move) syntax:
 # Note that we have just changed the units to be in cm.
 
-nd1.move(5.08, 5.08)          # Relative move to (2 inches,2 inches), in cm
-nd1.line(-2.54, -2.54)        # Relative move 2.54 cm in X and Y
+nd1.move(5.08, 5.08)  # Relative move to (2 inches,2 inches), in cm
+nd1.line(-2.54, -2.54)  # Relative move 2.54 cm in X and Y
 nd1.move(0, 2.54)
-nd1.line(2.54, -2.54)         # Relative move 2.54 cm in X and Y
+nd1.line(2.54, -2.54)  # Relative move 2.54 cm in X and Y
 
-nd1.moveto(0, 0)              # Return home
+nd1.moveto(0, 0)  # Return home
 
 
 # Change some options, just to show how we do so:
-nd1.options.units = 0        # set working units back to inches.
-nd1.options.speed_pendown = 75     # set pen-down speed to fast
-nd1.options.pen_rate_lower = 10 # Set pen down very slowly
-nd1.update()                 # Process changes to options
+nd1.options.units = 0  # set working units back to inches.
+nd1.options.speed_pendown = 75  # set pen-down speed to fast
+nd1.options.pen_rate_lower = 10  # Set pen down very slowly
+nd1.update()  # Process changes to options
 
 
 # Draw a "+" through the square, using "go/goto" commands,
@@ -125,13 +125,13 @@ nd1.update()                 # Process changes to options
 
 nd1.goto(1.5, 1.0)
 nd1.pendown()
-nd1.go(0,1)
+nd1.go(0, 1)
 nd1.penup()
 nd1.goto(1.0, 1.5)
 nd1.pendown()
-nd1.go(1,0)
+nd1.go(1, 0)
 nd1.penup()
 
-nd1.goto(0, 0)                # Return home
+nd1.goto(0, 0)  # Return home
 
-nd1.disconnect()             # Close serial port to NextDraw
+nd1.disconnect()  # Close serial port to NextDraw

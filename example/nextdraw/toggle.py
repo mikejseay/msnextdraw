@@ -1,4 +1,4 @@
-'''
+"""
 toggle.py
 
 Demonstrate use of nextdraw module with the "toggle" utility command,
@@ -61,14 +61,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-'''
-
-
+"""
 
 from nextdraw import NextDraw
 
-nd1 = NextDraw() # Create class instance
-nd1.plot_setup()        # Run setup without input file
+nd1 = NextDraw()  # Create class instance
+nd1.plot_setup()  # Run setup without input file
 nd1.options.mode = "utility"
 nd1.options.utility_cmd = "toggle"
-nd1.plot_run()          # Execute the command
+nd1.plot_run()  # Execute the command

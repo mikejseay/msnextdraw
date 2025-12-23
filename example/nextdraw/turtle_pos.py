@@ -1,4 +1,4 @@
-'''
+"""
 turtle_pos.py
 
 Demonstrate use of nextdraw module in "interactive" mode, showing how out-of-bounds
@@ -68,18 +68,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-'''
+"""
 
 import sys
 
 from nextdraw import NextDraw
 
-nd1 = NextDraw() # Initialize class
+nd1 = NextDraw()  # Initialize class
+
 
 def print_position():
-    '''
+    """
     Query, report, and print position and pen state
-    '''
+    """
     turtle_position = nd1.turtle_pos()
     current_position = nd1.current_pos()
     print(f"Turtle: {turtle_position[0]:0.3f}, {turtle_position[1]:0.3f}")
@@ -89,35 +90,36 @@ def print_position():
     print("Turtle pen up: " + str(turtle_pen_state))
     print("Actual pen up: " + str(current_pen_state) + "\n")
 
-nd1.interactive()            # Enter interactive mode
-connected = nd1.connect()    # Open serial port to NextDraw
+
+nd1.interactive()  # Enter interactive mode
+connected = nd1.connect()  # Open serial port to NextDraw
 
 if not connected:
     print("Not connected to machine; exiting.")
-    sys.exit() # end script
+    sys.exit()  # end script
 
-nd1.options.speed_pendown = 10       # set pen-down speed to slow
-nd1.update()                         # Process changes to options
+nd1.options.speed_pendown = 10  # set pen-down speed to slow
+nd1.update()  # Process changes to options
 
 # Move out of bounds, using, using "moveto/lineto" (absolute move) syntax:
 
 print_position()
-nd1.moveto(0,1)              # Absolute pen-up move, to (0 inch, 1 inch)
+nd1.moveto(0, 1)  # Absolute pen-up move, to (0 inch, 1 inch)
 print_position()
 
-nd1.lineto(1,1)              # Absolute pen-down move, to (1 inch, 1 inch)
+nd1.lineto(1, 1)  # Absolute pen-down move, to (1 inch, 1 inch)
 print_position()
 
-nd1.lineto(3,-1)              # Absolute pen-down move, to (3 inch, -1 inch)
+nd1.lineto(3, -1)  # Absolute pen-down move, to (3 inch, -1 inch)
 print_position()
 # Out of bounds here; note that turtle position is down, but pen is up.
 # Note that actual pen position is where it left bounds, but turtle position has moved.
 
-nd1.lineto(5,1)              # Absolute pen-down move, to (5 inch, 1 inch)
+nd1.lineto(5, 1)  # Absolute pen-down move, to (5 inch, 1 inch)
 print_position()
 
 nd1.penup()
-nd1.moveto(0,0)              # Pen-up return home
+nd1.moveto(0, 0)  # Pen-up return home
 print_position()
 
-nd1.disconnect()             # Close serial port to NextDraw
+nd1.disconnect()  # Close serial port to NextDraw
