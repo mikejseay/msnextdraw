@@ -57,7 +57,11 @@ def generate_christmas_tree_svg(filename="christmas_tree.svg"):
     trunk_height = 50
     trunk_x = center_x - trunk_width / 2
     trunk_y = end_y
-    trunk_path = f"M {trunk_x:.2f} {trunk_y:.2f} L {trunk_x + trunk_width:.2f} {trunk_y:.2f} L {trunk_x + trunk_width:.2f} {trunk_y + trunk_height:.2f} L {trunk_x:.2f} {trunk_y + trunk_height:.2f} Z"
+    trunk_path = (
+        f"M {trunk_x:.2f} {trunk_y:.2f} L {trunk_x + trunk_width:.2f} {trunk_y:.2f} "
+        f"L {trunk_x + trunk_width:.2f} {trunk_y + trunk_height:.2f} "
+        f"L {trunk_x:.2f} {trunk_y + trunk_height:.2f} Z"
+    )
 
     # Generate star at top
     star_points = generate_star(center_x, start_y - 15, 15, 7, 5)
@@ -70,13 +74,13 @@ def generate_christmas_tree_svg(filename="christmas_tree.svg"):
     svg_content = f'''<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
   <rect width="100%" height="100%" fill="white"/>
-  
+
   <!-- Star at top -->
   <path d="{star_path}" fill="none" stroke="#DAA520" stroke-width="2"/>
-  
+
   <!-- Tree (sine wave) -->
   <path d="{path_d}" fill="none" stroke="#228B22" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  
+
   <!-- Trunk -->
   <path d="{trunk_path}" fill="none" stroke="#8B4513" stroke-width="2"/>
 </svg>'''
@@ -94,10 +98,7 @@ def generate_star(cx, cy, outer_radius, inner_radius, num_points):
     points = []
     for i in range(num_points * 2):
         angle = (i * math.pi / num_points) - math.pi / 2
-        if i % 2 == 0:
-            r = outer_radius
-        else:
-            r = inner_radius
+        r = outer_radius if i % 2 == 0 else inner_radius
         x = cx + r * math.cos(angle)
         y = cy + r * math.sin(angle)
         points.append((x, y))
