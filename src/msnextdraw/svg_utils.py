@@ -1,16 +1,10 @@
 """
-Begin with an input file found in input/outline.svg, which contains a single enclosed arbitrary
-shape. Place a "ball" inside the shape at its centroid, then pick a random direction.
-Throw the ball in a straight line in that direction and trace its path. When the ball encounters
-the edge of the shape, it should collide and bounce off the edge in a different direction.
-Continue this process until the shape is sufficiently filled.
-Output the result as an SVG.
+Shared utilities for SVG parsing and manipulation.
 """
 
 from dataclasses import dataclass
 import math
 from pathlib import Path
-import random
 import re
 import xml.etree.ElementTree as ET
 
@@ -264,169 +258,53 @@ def compute_centroid(polygon: list[Point]) -> Point:
     return Point(cx, cy)
 
 
-def line_segment_intersection(
-    p1: Point, p2: Point, p3: Point, p4: Point
-) -> tuple[Point, float] | None:
+def get_bounding_box(polygon: list[Point]) -> tuple[float, float, float, float]:
+    """Get the bounding box of a polygon as (min_x, min_y, max_x, max_y)."""
+    if not polygon:
+        return (0, 0, 0, 0)
+
+    min_x = min(p.x for p in polygon)
+    max_x = max(p.x for p in polygon)
+    min_y = min(p.y for p in polygon)
+    max_y = max(p.y for p in polygon)
+
+    return (min_x, min_y, max_x, max_y)
+
+
+# SVG namespace configuration
+SVG_NAMESPACES = {
+    "": "http://www.w3.org/2000/svg",
+    "inkscape": "http://www.inkscape.org/namespaces/inkscape",
+    "sodipodi": "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd",
+    "xlink": "http://www.w3.org/1999/xlink",
+}
+
+
+def register_svg_namespaces():
+    """Register SVG namespaces with ElementTree."""
+    for prefix, uri in SVG_NAMESPACES.items():
+        ET.register_namespace(prefix, uri)
+
+
+def load_svg_polygon(input_path: str) -> tuple[str, list[Point]]:
     """
-    Find the intersection of two line segments (p1-p2 and p3-p4).
-    Returns the intersection point and the parameter t along the first segment, or None.
-    """
-    d1 = p2 - p1
-    d2 = p4 - p3
-    d3 = p1 - p3
+    Load an SVG file and extract the polygon from the first path element.
 
-    denom = d1.x * d2.y - d1.y * d2.x
-    if abs(denom) < 1e-10:
-        return None  # Lines are parallel
+    Args:
+        input_path: Path to the input SVG file
 
-    t = (d2.x * d3.y - d2.y * d3.x) / denom
-    s = (d1.x * d3.y - d1.y * d3.x) / denom
+    Returns:
+        Tuple of (svg_content, polygon_points)
 
-    if 0 < t <= 1 and 0 <= s <= 1:
-        intersection = p1 + d1 * t
-        return intersection, t
-
-    return None
-
-
-def find_first_intersection(
-    pos: Point, direction: Point, polygon: list[Point], epsilon: float = 1e-6
-) -> tuple[Point, Point, float] | None:
-    """
-    Find the first intersection of a ray from pos in direction with the polygon edges.
-    Returns (intersection_point, edge_normal, distance) or None.
-    """
-    n = len(polygon)
-    best_t = float("inf")
-    best_intersection = None
-    best_normal = None
-
-    # Cast a long ray
-    ray_end = pos + direction * 10000
-
-    for i in range(n):
-        p1 = polygon[i]
-        p2 = polygon[(i + 1) % n]
-
-        result = line_segment_intersection(pos, ray_end, p1, p2)
-        if result is not None:
-            intersection, t = result
-            # Only consider intersections that are ahead (t > epsilon to avoid self-intersection)
-            if t > epsilon and t < best_t:
-                best_t = t
-                best_intersection = intersection
-
-                # Compute edge normal (perpendicular to edge, pointing inward)
-                edge = p2 - p1
-                # Normal perpendicular to edge
-                normal = Point(-edge.y, edge.x).normalize()
-
-                # Make sure normal points inward (opposite to direction)
-                if normal.dot(direction) > 0:
-                    normal = Point(-normal.x, -normal.y)
-
-                best_normal = normal
-
-    if best_intersection is not None and best_normal is not None:
-        return best_intersection, best_normal, best_t * 10000  # Actual distance
-
-    return None
-
-
-def reflect_direction(direction: Point, normal: Point) -> Point:
-    """Reflect a direction vector off a surface with given normal."""
-    # r = d - 2(d·n)n
-    dot = direction.dot(normal)
-    return direction - 2 * dot * normal
-
-
-def simulate_bouncing_ball(
-    polygon: list[Point],
-    num_bounces: int = 100,
-    seed: int | None = None,
-) -> list[Point]:
-    """
-    Simulate a ball bouncing inside a polygon.
-    Returns the path as a list of points.
-    """
-    if seed is not None:
-        random.seed(seed)
-
-    # Start at centroid
-    centroid = compute_centroid(polygon)
-    pos = centroid
-
-    # Random initial direction
-    angle = random.uniform(0, 2 * math.pi)
-    direction = Point(math.cos(angle), math.sin(angle))
-
-    path = [pos]
-
-    for _ in range(num_bounces):
-        result = find_first_intersection(pos, direction, polygon)
-        if result is None:
-            # No intersection found, stop
-            break
-
-        intersection, normal, _ = result
-
-        # Move to the intersection point (slightly before to avoid getting stuck)
-        pos = intersection
-
-        path.append(pos)
-
-        # Reflect direction
-        direction = reflect_direction(direction, normal).normalize()
-
-        # Add small random perturbation to avoid getting stuck in loops
-        perturbation = random.uniform(-0.05, 0.05)
-        angle = math.atan2(direction.y, direction.x) + perturbation
-        direction = Point(math.cos(angle), math.sin(angle))
-
-    return path
-
-
-def path_to_svg_polyline(
-    path: list[Point], stroke_color: str = "blue", stroke_width: float = 0.5
-) -> str:
-    """Convert a path of points to an SVG polyline element."""
-    if len(path) < 2:
-        return ""
-
-    points_str = " ".join(f"{p.x},{p.y}" for p in path)
-    return (
-        f'<polyline points="{points_str}" '
-        f'fill="none" stroke="{stroke_color}" stroke-width="{stroke_width}" '
-        f'stroke-linecap="round" stroke-linejoin="round" />'
-    )
-
-
-def fill_shape_with_bouncing_ball(
-    input_path: str = "input/outline.svg",
-    output_path: str = "output/filled.svg",
-    num_bounces: int = 500,
-    stroke_color: str = "blue",
-    stroke_width: float = 0.5,
-    seed: int | None = None,
-):
-    """
-    Load an SVG with a single enclosed shape, simulate a bouncing ball inside it,
-    and save the result with both the original shape and the ball's path.
+    Raises:
+        ValueError: If no path element is found or path has no 'd' attribute
     """
     # Read the input SVG as text to preserve original formatting
     with open(input_path, encoding="utf-8") as f:
         svg_content = f.read()
 
-    # Parse to extract path data for collision detection
-    # Register namespaces first
-    namespaces = {
-        "": "http://www.w3.org/2000/svg",
-        "inkscape": "http://www.inkscape.org/namespaces/inkscape",
-        "sodipodi": "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd",
-        "xlink": "http://www.w3.org/1999/xlink",
-    }
-    for prefix, uri in namespaces.items():
-        ET.register_namespace(prefix, uri)
+    # Register namespaces
+    register_svg_namespaces()
 
     root = ET.fromstring(svg_content)
 
@@ -449,76 +327,80 @@ def fill_shape_with_bouncing_ball(
     if len(polygon) < 3:
         raise ValueError("Path does not form a valid polygon")
 
-    print(f"Parsed polygon with {len(polygon)} points")
-    print(f"Centroid: {compute_centroid(polygon)}")
+    return svg_content, polygon
 
-    # Simulate the bouncing ball
-    ball_path = simulate_bouncing_ball(polygon, num_bounces=num_bounces, seed=seed)
-    print(f"Generated path with {len(ball_path)} points")
 
-    # Create the polyline SVG string
-    points_str = " ".join(f"{p.x},{p.y}" for p in ball_path)
-    polyline_svg = (
+def points_to_polyline_svg(
+    points: list[Point],
+    stroke_color: str = "blue",
+    stroke_width: float = 0.5,
+) -> str:
+    """
+    Convert a list of points to an SVG polyline element string.
+
+    Args:
+        points: List of points forming the path
+        stroke_color: Color of the stroke
+        stroke_width: Width of the stroke
+
+    Returns:
+        SVG polyline element string
+    """
+    if len(points) < 2:
+        return ""
+
+    points_str = " ".join(f"{p.x},{p.y}" for p in points)
+    return (
         f'<polyline points="{points_str}" '
         f'fill="none" stroke="{stroke_color}" stroke-width="{stroke_width}" '
         f'stroke-linecap="round" stroke-linejoin="round" />'
     )
 
-    # Find the closing </g> tag of layer1 and insert before it
-    # This preserves the original SVG formatting
-    import re as regex
 
-    # Find the last </g> before </svg> to insert the polyline
-    # Look for the group containing path2
-    group_pattern = regex.compile(
+def insert_element_into_svg(svg_content: str, element_svg: str) -> str:
+    """
+    Insert an SVG element into the SVG content, preferably inside layer1.
+
+    Args:
+        svg_content: Original SVG content string
+        element_svg: SVG element string to insert
+
+    Returns:
+        Modified SVG content with element inserted
+
+    Raises:
+        ValueError: If no suitable insertion point is found
+    """
+    # Find the closing </g> tag of layer1 and insert before it
+    group_pattern = re.compile(
         r'(<g[^>]*id="layer1"[^>]*>.*?)(</g>\s*</svg>)',
-        regex.DOTALL | regex.IGNORECASE,
+        re.DOTALL | re.IGNORECASE,
     )
     match = group_pattern.search(svg_content)
 
     if match:
-        # Insert polyline before the closing </g>
-        new_content = svg_content[: match.end(1)] + polyline_svg + svg_content[match.start(2) :]
-    else:
-        # Fallback: insert before </svg>
-        svg_close_pattern = regex.compile(r"</svg\s*>", regex.IGNORECASE)
-        svg_match = svg_close_pattern.search(svg_content)
-        if svg_match:
-            new_content = (
-                svg_content[: svg_match.start()] + polyline_svg + svg_content[svg_match.start() :]
-            )
-        else:
-            raise ValueError("Could not find suitable insertion point in SVG")
+        # Insert element before the closing </g>
+        return svg_content[: match.end(1)] + element_svg + svg_content[match.start(2) :]
 
-    # Ensure output directory exists
+    # Fallback: insert before </svg>
+    svg_close_pattern = re.compile(r"</svg\s*>", re.IGNORECASE)
+    svg_match = svg_close_pattern.search(svg_content)
+    if svg_match:
+        return svg_content[: svg_match.start()] + element_svg + svg_content[svg_match.start() :]
+
+    raise ValueError("Could not find suitable insertion point in SVG")
+
+
+def save_svg(output_path: str, svg_content: str):
+    """
+    Save SVG content to a file, creating directories as needed.
+
+    Args:
+        output_path: Path to the output file
+        svg_content: SVG content to write
+    """
     output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    # Write the output SVG
     with open(output_path, "w", encoding="utf-8") as f:
-        f.write(new_content)
-
-    print(f"Saved output to {output_path}")
-
-
-def main():
-    """Main function to run the fill collision simulation."""
-    # Get the project root directory
-    script_dir = Path(__file__).resolve().parent
-    project_root = script_dir.parent.parent
-
-    input_file = project_root / "input" / "outline.svg"
-    output_file = project_root / "output" / "fill_collision.svg"
-
-    fill_shape_with_bouncing_ball(
-        input_path=str(input_file),
-        output_path=str(output_file),
-        num_bounces=100,
-        stroke_color="blue",
-        stroke_width=0.3,
-        seed=42,  # For reproducibility
-    )
-
-
-if __name__ == "__main__":
-    main()
+        f.write(svg_content)
