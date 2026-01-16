@@ -9,6 +9,7 @@ around the corners in each iteration.
 Output the result as an SVG.
 """
 
+import math
 from pathlib import Path
 
 from msnextdraw.svg_utils import (
@@ -19,6 +20,65 @@ from msnextdraw.svg_utils import (
     points_to_polyline_svg,
     save_svg,
 )
+
+
+def resample_points(points: list[Point], spacing: float = 1.0) -> list[Point]:
+    """
+    Resample a list of points to create equally spaced points along the path.
+
+    Args:
+        points: The original list of points
+        spacing: The desired distance between consecutive resampled points
+
+    Returns:
+        A new list of points with equal spacing along the path
+    """
+    if len(points) < 2:
+        return points.copy()
+
+    resampled = [points[0]]
+    remaining_distance = spacing
+
+    for i in range(len(points) - 1):
+        p1 = points[i]
+        p2 = points[i + 1]
+
+        # Calculate segment length
+        dx = p2.x - p1.x
+        dy = p2.y - p1.y
+        segment_length = math.sqrt(dx * dx + dy * dy)
+
+        if segment_length == 0:
+            continue
+
+        # Direction vector (normalized)
+        dir_x = dx / segment_length
+        dir_y = dy / segment_length
+
+        # Current position along this segment
+        current_pos = 0.0
+
+        # Walk along this segment, placing points at equal intervals
+        while current_pos + remaining_distance <= segment_length:
+            current_pos += remaining_distance
+            new_x = p1.x + dir_x * current_pos
+            new_y = p1.y + dir_y * current_pos
+            resampled.append(Point(new_x, new_y))
+            remaining_distance = spacing
+
+        # Update remaining distance for next segment
+        remaining_distance -= segment_length - current_pos
+
+    # Optionally add the last point if it's not too close to the previous one
+    last_original = points[-1]
+    last_resampled = resampled[-1]
+    dist_to_last = math.sqrt(
+        (last_original.x - last_resampled.x) ** 2 + (last_original.y - last_resampled.y) ** 2
+    )
+    if dist_to_last > spacing * 0.5:
+        resampled.append(last_original)
+
+    return resampled
 
 
 def get_square_corners(center: Point, side_length: float) -> list[Point]:
@@ -90,8 +150,12 @@ def trace_squares_on_path(
     print(f"Bounding box: width={width:.2f}, height={height:.2f}")
     print(f"Square side length: {square_side:.2f}")
 
+    # Resample points to have equal spacing
+    resampled_points = resample_points(line_points, spacing=1.0)
+    print(f"Resampled to {len(resampled_points)} evenly spaced points")
+
     # Generate the traced path
-    traced_path = trace_line_with_squares(line_points, square_side)
+    traced_path = trace_line_with_squares(resampled_points, square_side)
     print(f"Generated traced path with {len(traced_path)} points")
 
     # Create the polyline SVG string
