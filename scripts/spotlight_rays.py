@@ -13,6 +13,49 @@ import math
 from pathlib import Path
 
 
+def ray_circle_intersection(
+    x: float,
+    y: float,
+    dx: float,
+    dy: float,
+    cx: float,
+    cy: float,
+    r: float,
+) -> float | None:
+    """
+    Find the parameter t where a ray intersects a circle.
+
+    Ray: (x + t*dx, y + t*dy)
+    Circle: (px - cx)^2 + (py - cy)^2 = r^2
+
+    Returns the smallest positive t, or None if no intersection.
+    """
+    # Vector from ray origin to circle center
+    fx = x - cx
+    fy = y - cy
+
+    # Quadratic coefficients: a*t^2 + b*t + c = 0
+    a = dx * dx + dy * dy
+    b = 2 * (fx * dx + fy * dy)
+    c = fx * fx + fy * fy - r * r
+
+    discriminant = b * b - 4 * a * c
+
+    if discriminant < 0:
+        return None  # No intersection
+
+    sqrt_disc = math.sqrt(discriminant)
+    t1 = (-b - sqrt_disc) / (2 * a)
+    t2 = (-b + sqrt_disc) / (2 * a)
+
+    # Return the smallest positive t
+    if t1 > 1e-6:
+        return t1
+    if t2 > 1e-6:
+        return t2
+    return None
+
+
 def reflect_ray(
     start_x: float,
     start_y: float,
@@ -20,6 +63,7 @@ def reflect_ray(
     room_width: float,
     room_height: float,
     max_bounces: int = 10,
+    obstacle: tuple[float, float, float] | None = None,
 ) -> list[tuple[float, float]]:
     """
     Trace a ray from start position at given angle, bouncing off room walls.
@@ -31,6 +75,7 @@ def reflect_ray(
         room_width: Width of the room
         room_height: Height of the room
         max_bounces: Maximum number of reflections
+        obstacle: Optional circular obstacle (cx, cy, radius) that absorbs rays
 
     Returns:
         List of (x, y) points tracing the ray path
@@ -46,6 +91,15 @@ def reflect_ray(
 
         min_t = float("inf")
         wall_hit = None
+        hit_obstacle = False
+
+        # Check obstacle intersection first
+        if obstacle is not None:
+            obs_cx, obs_cy, obs_r = obstacle
+            t_obs = ray_circle_intersection(x, y, dx, dy, obs_cx, obs_cy, obs_r)
+            if t_obs is not None and t_obs < min_t:
+                min_t = t_obs
+                hit_obstacle = True
 
         # Right wall (x = room_width)
         if dx > 0:
@@ -55,6 +109,7 @@ def reflect_ray(
                 if 0 <= new_y <= room_height:
                     min_t = t
                     wall_hit = "right"
+                    hit_obstacle = False
 
         # Left wall (x = 0)
         if dx < 0:
@@ -64,6 +119,7 @@ def reflect_ray(
                 if 0 <= new_y <= room_height:
                     min_t = t
                     wall_hit = "left"
+                    hit_obstacle = False
 
         # Top wall (y = 0)
         if dy < 0:
@@ -73,6 +129,7 @@ def reflect_ray(
                 if 0 <= new_x <= room_width:
                     min_t = t
                     wall_hit = "top"
+                    hit_obstacle = False
 
         # Bottom wall (y = room_height)
         if dy > 0:
@@ -82,8 +139,9 @@ def reflect_ray(
                 if 0 <= new_x <= room_width:
                     min_t = t
                     wall_hit = "bottom"
+                    hit_obstacle = False
 
-        if wall_hit is None or min_t == float("inf"):
+        if (wall_hit is None and not hit_obstacle) or min_t == float("inf"):
             break
 
         # Move to intersection point
@@ -95,6 +153,10 @@ def reflect_ray(
         y = max(0, min(room_height, y))
 
         points.append((x, y))
+
+        # If we hit the obstacle, the ray is absorbed - stop tracing
+        if hit_obstacle:
+            break
 
         # Reflect the direction based on which wall was hit
         if wall_hit in ("left", "right"):
@@ -120,6 +182,8 @@ def draw_spotlight_rays(
     stroke_width: float = 1.5,
     room_stroke_color: str = "black",
     room_stroke_width: float = 3,
+    obstacle: tuple[float, float, float] | None = None,
+    obstacle_color: str = "#444444",
 ):
     """
     Draw a spotlight shining into a room with rays bouncing off walls.
@@ -139,6 +203,8 @@ def draw_spotlight_rays(
         stroke_width: Width of the ray lines
         room_stroke_color: Color of the room outline
         room_stroke_width: Width of the room outline
+        obstacle: Optional circular obstacle (cx, cy, radius) that absorbs rays
+        obstacle_color: Color of the obstacle circle
     """
     # Ensure output directory exists
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -168,6 +234,15 @@ def draw_spotlight_rays(
     )
     svg_elements.append(spotlight_circle)
 
+    # Draw the obstacle circle if provided
+    if obstacle is not None:
+        obs_cx, obs_cy, obs_r = obstacle
+        obstacle_circle = (
+            f'<circle cx="{obs_cx + margin}" cy="{obs_cy + margin}" r="{obs_r}" '
+            f'fill="{obstacle_color}" stroke="{obstacle_color}" stroke-width="2" />'
+        )
+        svg_elements.append(obstacle_circle)
+
     # Calculate ray angles
     center_angle_rad = math.radians(center_angle)
     half_spread_rad = math.radians(angle_spread / 2)
@@ -188,7 +263,9 @@ def draw_spotlight_rays(
         start_y = spotlight_y - spotlight_radius * math.sin(ray_angle)  # SVG y is inverted
 
         # Trace the ray with reflections
-        ray_points = reflect_ray(start_x, start_y, ray_angle, room_width, room_height, max_bounces)
+        ray_points = reflect_ray(
+            start_x, start_y, ray_angle, room_width, room_height, max_bounces, obstacle
+        )
 
         # Convert to SVG path (adjust for margin)
         if len(ray_points) >= 2:
@@ -227,13 +304,14 @@ if __name__ == "__main__":
     # Default parameters
     draw_spotlight_rays(
         output_path="./output/spotlight_rays.svg",
-        room_width=816,
-        room_height=1132,
-        spotlight_x=80,
-        spotlight_y=320,
+        room_width=750,
+        room_height=1000,
+        spotlight_x=25,
+        spotlight_y=250,
         spotlight_radius=15,
         center_angle=75,
         angle_spread=30,
         num_rays=15,
         max_bounces=3,
+        obstacle=(500, 300, 150),  # Circle at (600, 200) with radius 100
     )
