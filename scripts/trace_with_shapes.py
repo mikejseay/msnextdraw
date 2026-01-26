@@ -95,67 +95,112 @@ def get_square_corners(center: Point, side_length: float) -> list[Point]:
     ]
 
 
-def trace_line_with_squares(
+def get_circle_points(center: Point, radius: float, num_points: int = 12) -> list[Point]:
+    """
+    Get points evenly distributed around a circle centered at the given point.
+
+    Args:
+        center: The center of the circle
+        radius: The radius of the circle
+        num_points: Number of points around the circle
+
+    Returns:
+        List of points around the circle, starting from the top and going clockwise
+    """
+    points = []
+    for i in range(num_points):
+        # Start from top (-pi/2) and go clockwise
+        angle = -math.pi / 2 + (2 * math.pi * i / num_points)
+        x = center.x + radius * math.cos(angle)
+        y = center.y + radius * math.sin(angle)
+        points.append(Point(x, y))
+    return points
+
+
+def trace_line_with_shapes(
     line_points: list[Point],
-    square_side: float,
+    shape_size: float,
+    use_circle: bool = False,
+    circle_points: int = 12,
 ) -> list[Point]:
     """
-    Trace along a line, connecting to rotating corners of a square centered at each point.
+    Trace along a line, connecting to rotating positions of a shape centered at each point.
 
     Args:
         line_points: The points forming the input line/path
-        square_side: The side length of the square
+        shape_size: The side length (for square) or diameter (for circle)
+        use_circle: If True, use circle positions; if False, use square corners
+        circle_points: Number of points around the circle (only used if use_circle=True)
 
     Returns:
         A list of points forming the traced path
     """
     traced_path = []
-    corner_index = 0  # Start at top-left corner
+    position_index = 0
+
+    num_positions = circle_points if use_circle else 4
 
     for point in line_points:
-        # Get corners of square centered at current point
-        corners = get_square_corners(point, square_side)
+        if use_circle:
+            # Get points around circle (radius = shape_size / 2)
+            positions = get_circle_points(point, shape_size / 2, circle_points)
+        else:
+            # Get corners of square
+            positions = get_square_corners(point, shape_size)
 
-        # Add the current corner to the path
-        traced_path.append(corners[corner_index])
+        # Add the current position to the path
+        traced_path.append(positions[position_index])
 
-        # Rotate to next corner (0 -> 1 -> 2 -> 3 -> 0 -> ...)
-        corner_index = (corner_index + 1) % 4
+        # Rotate to next position
+        position_index = (position_index + 1) % num_positions
 
     return traced_path
 
 
-def trace_squares_on_path(
+def trace_with_shapes_on_path(
     input_path: str = "input/outline.svg",
-    output_path: str = "output/trace_squares.svg",
+    output_path: str = "output/trace_with_shapes.svg",
     stroke_color: str = "blue",
     stroke_width: float = 0.5,
+    use_circle: bool = False,
+    circle_points: int = 12,
 ):
     """
-    Load an SVG with a single line/path, trace it with rotating square corners,
+    Load an SVG with a single line/path, trace it with rotating shape positions,
     and save the result with both the original shape and the traced path.
+
+    Args:
+        input_path: Path to the input SVG file
+        output_path: Path to save the output SVG file
+        stroke_color: Color of the traced line
+        stroke_width: Width of the traced line
+        use_circle: If True, use circle positions; if False, use square corners
+        circle_points: Number of points around the circle (only used if use_circle=True)
     """
     # Load SVG and extract the path points
     svg_content, line_points = load_svg_polygon(input_path)
 
     print(f"Parsed path with {len(line_points)} points")
 
-    # Calculate bounding box to determine square size
+    # Calculate bounding box to determine shape size
     min_x, min_y, max_x, max_y = get_bounding_box(line_points)
     width = max_x - min_x
     height = max_y - min_y
     longest_dimension = max(width, height)
-    square_side = longest_dimension / 30
+    shape_size = longest_dimension / 30
 
     print(f"Bounding box: width={width:.2f}, height={height:.2f}")
-    print(f"Square side length: {square_side:.2f}")
+    shape_type = "circle" if use_circle else "square"
+    print(f"Shape: {shape_type}, size: {shape_size:.2f}")
 
     # Resample points to have equal spacing
     resampled_points = resample_points(line_points, spacing=1.0)
     print(f"Resampled to {len(resampled_points)} evenly spaced points")
 
     # Generate the traced path
-    traced_path = trace_line_with_squares(resampled_points, square_side)
+    traced_path = trace_line_with_shapes(
+        resampled_points, shape_size, use_circle=use_circle, circle_points=circle_points
+    )
     print(f"Generated traced path with {len(traced_path)} points")
 
     # Create the polyline SVG string
@@ -175,13 +220,15 @@ def main():
     project_root = script_dir.parent
 
     input_file = project_root / "input" / "outline.svg"
-    output_file = project_root / "output" / "trace_squares.svg"
+    output_file = project_root / "output" / "trace_with_shapes.svg"
 
-    trace_squares_on_path(
+    trace_with_shapes_on_path(
         input_path=str(input_file),
         output_path=str(output_file),
         stroke_color="blue",
         stroke_width=0.3,
+        use_circle=True,  # Set to False for square corners
+        circle_points=12,
     )
 
 
